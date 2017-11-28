@@ -1,0 +1,23 @@
+{
+  "name": "zk-redux",
+  "version": "1.0.5",
+  "description": "redux 到底要解决什么问题？管理被多个组件所依赖或者影响的状态； 一个action需要被多个reducer处理吗？",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "rimraf lib && babel src --out-dir lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zkboys/zk-redux.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/zkboys/zk-redux/issues"
+  },
+  "homepage": "https://github.com/zkboys/zk-redux#readme",
+  "devDependencies": {
+    "babel-cli": "^6.26.0"
+  }
+}
