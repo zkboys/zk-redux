@@ -1,6 +1,6 @@
 {
     "name": "zk-redux",
-    "version": "1.0.6",
+    "version": "1.0.7",
     "description": "redux 到底要解决什么问题？管理被多个组件所依赖或者影响的状态； 一个action需要被多个reducer处理吗？",
     "main": "lib/index.js",
     "scripts": {
