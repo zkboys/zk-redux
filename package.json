@@ -1,6 +1,6 @@
 {
     "name": "zk-redux",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "description": "redux 到底要解决什么问题？管理被多个组件所依赖或者影响的状态； 一个action需要被多个reducer处理吗？",
     "main": "lib/index.js",
     "scripts": {
@@ -19,10 +19,12 @@
     "homepage": "https://github.com/zkboys/zk-redux#readme",
     "dependencies": {
         "flux-standard-action": "^2.0.0",
+        "lodash": "^4.17.4",
         "react-redux": "^5.0.6",
         "redux": "^3.7.2",
         "redux-actions": "^2.2.1",
-        "redux-thunk": "^2.2.0"
+        "redux-thunk": "^2.2.0",
+        "uuid": "^3.1.0"
     },
     "devDependencies": {
         "babel-cli": "^6.26.0"
