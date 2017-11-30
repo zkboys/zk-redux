@@ -77,7 +77,12 @@ export function getActionsAndReducers({models, syncKeys, pageInitState}) {
                     arActions[actionName] = createAction(type);
                     arReducers[type] = ar[actionName];
                 } else {
-                    const {payloadCreator = identity, metaCreator = identity, reducer = (state) => ({...state})} = arValue;
+                    const {payload = identity, meta = identity, reducer = (state) => ({...state})} = arValue;
+                    let metaCreator = meta;
+                    let payloadCreator = payload;
+                    if (typeof payloadCreator !== 'function') payloadCreator = () => payload;
+                    if (typeof metaCreator !== 'function') metaCreator = () => meta;
+
                     arActions[actionName] = createAction(type, payloadCreator, metaCreator);
                     arReducers[type] = reducer;
                 }
