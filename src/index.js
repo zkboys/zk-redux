@@ -113,3 +113,26 @@ export function getActionsAndReducers({models, syncKeys, pageInitState}) {
         reducers: _reducers,
     }
 }
+
+
+/**
+ * 通用异步Meta处理，默认启用errorTip，禁用successTip，onResolve，onReject回调
+ * @param successTip
+ * @param errorTip
+ * @param onResolve
+ * @param onReject
+ * @returns {{successTip: boolean, errorTip, onResolve: *, onReject: *}}
+ */
+export function commonAsyncMeta({
+                                    successTip = false,
+                                    errorTip,
+                                    onResolve,
+                                    onReject,
+                                }) {
+    return {
+        successTip,
+        errorTip,
+        onResolve,
+        onReject,
+    }
+}
