@@ -60,8 +60,8 @@ export function getActionsAndReducers({models, syncKeys, pageInitState}) {
     let _actions = checkAction({actionPage, utils});
     let _reducers = {pageState};
 
-    Object.keys(models).forEach(key => {
-        const model = models[key];
+    Object.keys(models).forEach(modelName => {
+        const model = models[modelName];
         const initialState = model.initialState;
         let actions = model.actions || {};
         let reducers = model.reducers || {};
@@ -71,7 +71,7 @@ export function getActionsAndReducers({models, syncKeys, pageInitState}) {
             const arActions = {};
             const arReducers = {};
             Object.keys(ar).forEach(actionName => {
-                const type = uuid();
+                const type = `${modelName}-${actionName}-${uuid()}`;
                 const arValue = ar[actionName];
                 if (typeof arValue === 'function') {
                     arActions[actionName] = createAction(type);
@@ -104,8 +104,8 @@ export function getActionsAndReducers({models, syncKeys, pageInitState}) {
             }
         });
 
-        _actions[key] = actions;
-        _reducers[key] = handleActions(__reducers, initialState);
+        _actions[modelName] = actions;
+        _reducers[modelName] = handleActions(__reducers, initialState);
     });
 
     return {
