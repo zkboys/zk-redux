@@ -22,10 +22,10 @@ export default function handleAsyncReducer({
         const {sequence = {}} = meta;
 
         function getReturnState(preState, method) {
-            const newState = method(preState, action);
-            if (!newState) {
-                throw Error(`handleAsyncReducer's ${method} method must return an object to compose a new state`);
-            }
+            const newState = method(preState, action) || {};
+            // if (!newState) {
+            //     throw Error(`handleAsyncReducer's ${method} method must return an object to compose a new state`);
+            // }
             return {...preState, ...newState};
         }
 

@@ -65,21 +65,46 @@ export function getActionsAndReducers({models, syncKeys, pageInitState}) {
         const initialState = model.initialState;
         let actions = model.actions || {};
         let reducers = model.reducers || {};
-        const ar = model.ar;
 
-        if (ar) { // 处理action reducer 合并写法
+        // 除去'initialState', 'actions', 'reducers'等约定属性，其他都视为actions与reducers合并写法
+        const ar = {};
+        let hasAr = false;
+        Object.keys(model).forEach(item => {
+            if (['initialState', 'actions', 'reducers'].indexOf(item) === -1) {
+                ar[item] = model[item];
+                hasAr = true;
+            }
+        });
+
+        // 处理action reducer 合并写法
+        if (hasAr) {
             const arActions = {};
             const arReducers = {};
             Object.keys(ar).forEach(actionName => {
                 const type = `${modelName}-${actionName}-${uuid()}`;
                 const arValue = ar[actionName];
+
+                // ar 函数写法
                 if (typeof arValue === 'function') {
                     arActions[actionName] = createAction(type);
                     arReducers[type] = ar[actionName];
                 } else {
-                    const {payload = identity, meta = identity, reducer = (state) => ({...state})} = arValue;
+                    // ar 对象写法
+                    let {payload = identity, meta, reducer = (state) => ({...state})} = arValue;
+
+                    // 处理meta默认值
+                    if (!meta) {
+                        if (payload && typeof payload.then === 'function') { // is promise
+                            meta = commonAsyncMeta; // 异步默认meta
+                        } else {
+                            meta = identity; // 非异步默认 meta
+                        }
+                    }
+
                     let metaCreator = meta;
                     let payloadCreator = payload;
+
+                    // 非函数时，处理
                     if (typeof payloadCreator !== 'function') payloadCreator = () => payload;
                     if (typeof metaCreator !== 'function') metaCreator = () => meta;
 
@@ -93,14 +118,25 @@ export function getActionsAndReducers({models, syncKeys, pageInitState}) {
         }
 
 
-        // 处理异步reducer
+        // 处理reducer
         const __reducers = {};
         Object.keys(reducers).forEach(key => {
             const reducer = reducers[key];
+
             if (typeof reducer === 'object') {
+                // 对象写法 视为异步reducer
+                // _handleAsyncReducer内部对新、旧state自动进行了合并，异步reducer各个函数（padding、resolve等）只需要返回新数据即可
                 __reducers[key] = _handleAsyncReducer(reducer);
             } else {
-                __reducers[key] = reducer;
+                // 函数视为普通reducer, 进行新、旧state合并，model中的reducer只返回新数据即可
+                __reducers[key] = (state, action) => {
+                    const newState = reducer(state, action) || {}; // 允许reducer不返回数据
+
+                    return {
+                        ...state,
+                        ...newState,
+                    };
+                };
             }
         });
 
