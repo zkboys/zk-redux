@@ -1,6 +1,5 @@
 import {createAction, handleActions} from 'redux-actions';
 import {identity} from 'lodash/util';
-import uuid from 'uuid/v4';
 import actionUtils from './action-utils';
 import checkAction from './check-action';
 import reducerPage from './reducer-page';
@@ -66,57 +65,54 @@ export function getActionsAndReducers({models, syncKeys, pageInitState}) {
         let actions = model.actions || {};
         let reducers = model.reducers || {};
 
+
+        // 处理action reducer 合并写法
         // 除去'initialState', 'actions', 'reducers'等约定属性，其他都视为actions与reducers合并写法
         const ar = {};
-        let hasAr = false;
         Object.keys(model).forEach(item => {
             if (['initialState', 'actions', 'reducers'].indexOf(item) === -1) {
                 ar[item] = model[item];
-                hasAr = true;
             }
         });
 
-        // 处理action reducer 合并写法
-        if (hasAr) {
-            const arActions = {};
-            const arReducers = {};
-            Object.keys(ar).forEach(actionName => {
-                const type = `${modelName}-${actionName}-${uuid()}`;
-                const arValue = ar[actionName];
+        const arActions = {};
+        const arReducers = {};
+        Object.keys(ar).forEach((actionName, index) => {
+            const type = `${modelName}-${index}-${actionName}-type`.toUpperCase(); // 保证唯一并增强type可读性，方便调试；
+            const arValue = ar[actionName];
 
-                // ar 函数写法
-                if (typeof arValue === 'function') {
-                    arActions[actionName] = createAction(type);
-                    arReducers[type] = ar[actionName];
-                } else {
-                    // ar 对象写法
-                    let {payload = identity, meta, reducer = (state) => ({...state})} = arValue;
+            // ar 函数写法
+            if (typeof arValue === 'function') {
+                arActions[actionName] = createAction(type);
+                arReducers[type] = ar[actionName];
+            } else {
+                // ar 对象写法
+                let {payload = identity, meta, reducer = (state) => ({...state})} = arValue;
 
-                    // 处理meta默认值
-                    if (!meta) {
-                        if (payload && typeof payload.then === 'function') { // is promise
-                            meta = commonAsyncMeta; // 异步默认meta
-                        } else {
-                            meta = identity; // 非异步默认 meta
-                        }
+                // 处理meta默认值
+                if (!meta) {
+                    if (payload && typeof payload.then === 'function') { // is promise
+                        meta = commonAsyncMeta; // 异步默认meta
+                    } else {
+                        meta = identity; // 非异步默认 meta
                     }
-
-                    let metaCreator = meta;
-                    let payloadCreator = payload;
-
-                    // 非函数时，处理
-                    if (typeof payloadCreator !== 'function') payloadCreator = () => payload;
-                    if (typeof metaCreator !== 'function') metaCreator = () => meta;
-
-                    arActions[actionName] = createAction(type, payloadCreator, metaCreator);
-                    arReducers[type] = reducer;
                 }
 
-            });
-            reducers = {...reducers, ...arReducers};
-            actions = {...actions, ...arActions};
-        }
+                let metaCreator = meta;
+                let payloadCreator = payload;
 
+                // 非函数时，处理
+                if (typeof payloadCreator !== 'function') payloadCreator = () => payload;
+                if (typeof metaCreator !== 'function') metaCreator = () => meta;
+
+                arActions[actionName] = createAction(type, payloadCreator, metaCreator);
+                arReducers[type] = reducer;
+            }
+
+        });
+
+        reducers = {...reducers, ...arReducers};
+        actions = {...actions, ...arActions};
 
         // 处理reducer
         const __reducers = {};
