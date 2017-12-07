@@ -5,15 +5,17 @@ import checkAction from './check-action';
 import reducerPage from './reducer-page';
 import * as actionPage from './action-page';
 import _handleAsyncReducer from './handle-async-reducer';
+import * as _actionTypes from './action-types';
 
-export * as actionTypes from './action-types';
 export middlewareAsyncActionCallback from './middleware-async-action-callback';
 export connect from './connect';
 export createConnectHOC from './connect-hoc';
-export const handleAsyncReducer = _handleAsyncReducer;
 export middlewarePromise from './middleware-promise';
 export middlewareSyncReducerToLocalStorage from './middleware-sync-reducer-to-local-storage';
 export middlewareUtils from './middleware-utils';
+
+export const actionTypes = _actionTypes;
+export const handleAsyncReducer = _handleAsyncReducer;
 
 let _handleError = ({error, errorTip}) => {
     console.error(error);
@@ -168,3 +170,5 @@ export function commonAsyncMeta({
         onReject,
     }
 }
+
+export const __DO_NOT_USE__ActionTypes = _actionTypes;
