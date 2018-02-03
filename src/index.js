@@ -51,11 +51,15 @@ export function getStorage() {
 /**
  * 获取并整合 actions reducers
  * @param models
- * @param syncKeys
  * @param pageInitState
  * @returns {{actions, reducers: {pageState}}}
  */
-export function getActionsAndReducers({models, syncKeys, pageInitState}) {
+export function getActionsAndReducers({models, pageInitState}) {
+    const syncKeys = Object.keys(models).filter(key => {
+        const {initialState = {}} = models[key];
+        return !!initialState.sync;
+    });
+
     const utils = actionUtils({pageInitState, syncKeys});
     const pageState = reducerPage(pageInitState);
     let _actions = checkAction({actionPage, utils});
@@ -64,9 +68,9 @@ export function getActionsAndReducers({models, syncKeys, pageInitState}) {
     Object.keys(models).forEach(modelName => {
         const model = models[modelName];
         const initialState = model.initialState;
+        const sync = initialState.sync;
         let actions = model.actions || {};
         let reducers = model.reducers || {};
-
 
         // 处理action reducer 合并写法
         // 除去'initialState', 'actions', 'reducers'等约定属性，其他都视为actions与reducers合并写法
@@ -83,12 +87,10 @@ export function getActionsAndReducers({models, syncKeys, pageInitState}) {
             const type = `${modelName}-${index}-${actionName}-type`.toUpperCase(); // 保证唯一并增强type可读性，方便调试；
             const arValue = ar[actionName];
 
-            // ar 函数写法
-            if (typeof arValue === 'function') {
+            if (typeof arValue === 'function') { // ar 函数写法
                 arActions[actionName] = createAction(type);
                 arReducers[type] = ar[actionName];
-            } else {
-                // ar 对象写法
+            } else { // ar 对象写法
                 let {payload = identity, meta, reducer = (state) => ({...state})} = arValue;
 
                 // 处理meta默认值
@@ -138,6 +140,30 @@ export function getActionsAndReducers({models, syncKeys, pageInitState}) {
             }
         });
 
+        if (sync) {
+            // 为meta添加__model_sync_name属性，同步中间件会用到
+            Object.keys(actions).forEach(item => {
+                const actionCreator = actions[item];
+                actions[item] = (...args) => {
+                    const action = actionCreator(...args);
+                    action.meta = action.meta === void 0 ? {} : action.meta;
+                    if (typeof action.meta !== 'object') throw new Error('when initialState has sync property，meta must be an object!');
+
+                    action.meta.__model_sync_name = modelName;
+
+                    return action;
+                };
+            });
+
+            // 从 store中恢复数据的reducer 如果为定义，使用默认reducers
+            if (sync && !__reducers[actionTypes.GET_STATE_FROM_STORAGE]) {
+                __reducers[actionTypes.GET_STATE_FROM_STORAGE] = (state, action) => {
+                    const {payload = {}} = action;
+                    const data = payload[modelName] || {};
+                    return {...state, ...data};
+                };
+            }
+        }
         _actions[modelName] = actions;
         _reducers[modelName] = handleActions(__reducers, initialState);
     });
