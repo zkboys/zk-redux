@@ -56,8 +56,8 @@ export function getStorage() {
  */
 export function getActionsAndReducers({models, pageInitState}) {
     const syncKeys = Object.keys(models).filter(key => {
-        const {initialState = {}} = models[key];
-        return !!initialState.sync;
+        const {syncState} = models[key];
+        return !!syncState;
     });
 
     const utils = actionUtils({pageInitState, syncKeys});
@@ -67,16 +67,18 @@ export function getActionsAndReducers({models, pageInitState}) {
 
     Object.keys(models).forEach(modelName => {
         const model = models[modelName];
-        const initialState = model.initialState;
-        const sync = initialState.sync;
-        let actions = model.actions || {};
-        let reducers = model.reducers || {};
+        let {
+            initialState = {},
+            syncState,
+            actions = {},
+            reducers = {},
+        } = model;
 
         // 处理action reducer 合并写法
-        // 除去'initialState', 'actions', 'reducers'等约定属性，其他都视为actions与reducers合并写法
+        // 除去'initialState', 'syncState', 'actions', 'reducers'等约定属性，其他都视为actions与reducers合并写法
         const ar = {};
         Object.keys(model).forEach(item => {
-            if (['initialState', 'actions', 'reducers'].indexOf(item) === -1) {
+            if (['initialState', 'syncState', 'actions', 'reducers'].indexOf(item) === -1) {
                 ar[item] = model[item];
             }
         });
@@ -140,23 +142,24 @@ export function getActionsAndReducers({models, pageInitState}) {
             }
         });
 
-        if (sync) {
-            // 为meta添加__model_sync_name属性，同步中间件会用到
+        if (syncState) {
+            // 为meta添加__model_sync_name 和 __model_sync_state 属性，同步中间件会用到
             Object.keys(actions).forEach(item => {
                 const actionCreator = actions[item];
                 actions[item] = (...args) => {
                     const action = actionCreator(...args);
                     action.meta = action.meta === void 0 ? {} : action.meta;
-                    if (typeof action.meta !== 'object') throw new Error('when initialState has sync property，meta must be an object!');
+                    if (typeof action.meta !== 'object') throw new Error(`when model has syncState property，meta must be an object! check ${modelName} ${item} action method`);
 
                     action.meta.__model_sync_name = modelName;
+                    action.meta.__model_sync_state = syncState;
 
                     return action;
                 };
             });
 
             // 从 store中恢复数据的reducer 如果为定义，使用默认reducers
-            if (sync && !__reducers[actionTypes.GET_STATE_FROM_STORAGE]) {
+            if (!__reducers[actionTypes.GET_STATE_FROM_STORAGE]) {
                 __reducers[actionTypes.GET_STATE_FROM_STORAGE] = (state, action) => {
                     const {payload = {}} = action;
                     const data = payload[modelName] || {};

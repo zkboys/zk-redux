@@ -24,11 +24,10 @@ function filterObjectByObject(originObj, mapObj = {}, result = {}) {
     return result;
 }
 
-function syncToStorage(key, state) {
-    const {sync} = state;
+function syncToStorage(key, syncState, state) {
     const Storage = getStorage();
-    // 根据 sync结构 获取 state中对应的数据，sync === true 获取state中所有数据
-    const data = sync === true ? state : filterObjectByObject(state, sync);
+    // 根据 syncConfig 结构 获取 state中对应的数据，syncConfig === true 获取state中所有数据
+    const data = syncState === true ? state : filterObjectByObject(state, syncState);
     Storage.setItem(key, data);
 }
 
@@ -38,8 +37,8 @@ export default ({dispatch, getState}) => next => action => {
         if (pageState) {
             Object.keys(pageState).forEach(key => {
                 const state = pageState[key];
-                if (state && state.sync) {
-                    syncToStorage(key, state);
+                if (state && state.syncState) {
+                    syncToStorage(key, state.syncState, state);
                 }
             });
         }
@@ -49,11 +48,12 @@ export default ({dispatch, getState}) => next => action => {
         return next(action);
     }
     const {meta = {}, sequence = {}, error, payload} = action;
-    const {__model_sync_name} = meta;
+    const {__model_sync_name, __model_sync_state} = meta;
 
     if (action.type === types.SYNC_STATE_TO_STORAGE) {
         let state = getState();
-        syncToStorage(payload, state[payload]);
+        const {syncModelName, syncModelState} = payload;
+        syncToStorage(syncModelName, syncModelState, state[syncModelName]);
     }
 
     if (!__model_sync_name || sequence.type === 'start' || error) {
@@ -65,7 +65,7 @@ export default ({dispatch, getState}) => next => action => {
     setTimeout(() => {
         dispatch({
             type: types.SYNC_STATE_TO_STORAGE,
-            payload: __model_sync_name,
+            payload: {syncModelName: __model_sync_name, syncModelState: __model_sync_state},
         });
     }, 16);
 };

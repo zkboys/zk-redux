@@ -9,7 +9,7 @@ export default function ({pageInitState, syncKeys = []}) {
         getStateFromStorage: createAction(types.GET_STATE_FROM_STORAGE, () => {
             if (pageInitState) {
                 syncKeys = syncKeys.concat(Object.keys(pageInitState).map(key => {
-                    if (pageInitState[key] && pageInitState[key].sync === true) {
+                    if (pageInitState[key] && pageInitState[key].syncState) {
                         return key;
                     }
                     return null;
