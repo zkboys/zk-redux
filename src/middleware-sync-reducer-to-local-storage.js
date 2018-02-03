@@ -26,7 +26,7 @@ function filterObjectByObject(originObj, mapObj = {}, result = {}) {
 
 function syncToStorage(key, syncState, state) {
     const Storage = getStorage();
-    // 根据 syncConfig 结构 获取 state中对应的数据，syncConfig === true 获取state中所有数据
+    // 根据 syncState 结构 获取 state中对应的数据，syncState === true 获取state中所有数据
     const data = syncState === true ? state : filterObjectByObject(state, syncState);
     Storage.setItem(key, data);
 }
