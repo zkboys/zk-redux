@@ -17,10 +17,11 @@ export default function ({pageInitState, syncKeys = []}) {
             }
             const Storage = getStorage();
             return Storage.multiGet(syncKeys);
-        }, (onResolve, onReject) => {
+        }, (onResolve, onReject, onComplete) => {
             return {
                 onResolve,
                 onReject,
+                onComplete,
             };
         }),
     };

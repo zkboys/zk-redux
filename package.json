@@ -1,6 +1,6 @@
 {
     "name": "zk-redux",
-    "version": "3.0.7",
+    "version": "3.0.8",
     "description": "redux 封装",
     "main": "lib/index.js",
     "scripts": {

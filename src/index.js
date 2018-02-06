@@ -184,19 +184,22 @@ export function getActionsAndReducers({models, pageInitState}) {
  * @param errorTip
  * @param onResolve
  * @param onReject
- * @returns {{successTip: boolean, errorTip, onResolve: *, onReject: *}}
+ * @param onComplete
+ * @returns {{successTip: boolean, errorTip, onResolve: *, onReject: *, onComplete: *}}
  */
 export function commonAsyncMeta({
                                     successTip = false,
                                     errorTip,
                                     onResolve,
                                     onReject,
+                                    onComplete,
                                 }) {
     return {
         successTip,
         errorTip,
         onResolve,
         onReject,
+        onComplete,
     }
 }
 

@@ -5,15 +5,15 @@ export default function utilsMiddleware() {
         const handleError = getHandleError();
         const handleSuccess = getHandleSuccess();
         const {payload, error, meta = {}} = action;
-        const {sequence = {}, successTip, errorTip = '未知系统错误'} = meta;
+        const {sequence = {}, successTip, errorTip} = meta;
         // error handle
-        if (errorTip && error) {
+        if (error) {
             handleError({
                 error: payload,
                 errorTip,
             });
         }
-        if (sequence.type === 'next' && !error && successTip) {
+        if (sequence.type === 'next' && !error) {
             handleSuccess({successTip});
         }
         next(action);
