@@ -11,7 +11,7 @@
  * @returns {function(*=, *=)}
  */
 export default function handleAsyncReducer({
-                                               always = (state) => ({...state}), // 每个状态之前都会触发
+                                               always = (state) => ({...state}),
                                                pending = (state) => ({...state}),
                                                resolve = (state) => ({...state}),
                                                reject = (state) => ({...state}),

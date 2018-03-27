@@ -5,13 +5,12 @@ redux 到底要解决什么问题？管理被多个组件所依赖或者影响�
 ## 关于redux
 actions可以被各个页面组件和reducers复用
 
-- 各个页面（组件）如果挂载到路由，export出`mapStateToProps`，系统就会将`LayoutComponent`组件 或者 默认导出组件 与redux关联，即可使用`this.props.actions`中的方法，获取到redux中的数据；
-- 各个页面（组件）如果不是挂载到路由上的，需要显示调用`connectComponent`进行redux的连接
+- 各个页面（组件）如果挂载到路由，export出`mapStateToProps`，系统就会将`LayoutComponent`组件或默认导出组件 与redux关联，即可使用`this.props.actions`中的方法，获取到redux中的数据；
+- 各个页面（组件）如果不是挂载到路由上的，需要显示调用`connectComponent`或者`connect`装饰器与redux的连接；
 - 各个页面（组件）如果已经与redux进行连接，通过`const {actions} = this.props`获取actions对象，然后调用`actions.xxx()` 触发action；
 - `mapStateToProps` 用于指定redux的state中哪部分数据用于当前组件，由于reducer的`combineReducers`方法包装之后，将各个reducer的state存放在对应的key中，key指的是combineReducers包装时指定的key，比如：
 
     ```javascript
-    zk-axios.js
     export default combineReducers({
         home, // 这个home就是key，es6写法
         utils,
@@ -31,7 +30,7 @@ actions可以被各个页面组件和reducers复用
     - ajax请求的异步数据
     - storage/cookie中获取数据
 - reducer为纯函数，负责处理数据，要对state做deepcopy，返回一个新的数据，不要直接操作state，不会涉及异步，不操作Storage，单纯的获取action的数据之后，做进一步处理。
-- store负责将数据以pros形式传递给component，以及通过中间件对数据统一处理。
+- store负责将数据以props形式传递给component，以及通过中间件对数据统一处理。
 - 组件，调用触发action，获取store处理过的数据，不发送ajax，不操作storage，单纯的展示数据。
 - 适当的区分哪些数据需要redux处理，哪些数据直接使用state，不要为了redux而redux
     - 哪些数据适合使用redux处理？
@@ -274,53 +273,3 @@ export default undoable(organization, {
 });
 
 ```
-
-### 页面级别Redux写法
-上述action，不仅仅将数据共享，action也进行了共享，对于页面来说如果仅仅需要共享数据，并不需要共享action，可以使用如下写法：
-```
-// 在具体的jsx页面中定义如下常量：
-export const INIT_STATE = {
-    scope: 'someUniqueString',
-    sync: true,
-    a: 3,
-    b: 4,
-};
-
-```
-说明：
-
-1. 如果要使用 actions.setState方法，INIT_STATE，必须定义， 必须定义，必须定义
-1. INIT_STATE：初始化state，这个会被脚本抓取，最终生成src/page-init-state.js，两个作用：
-    1. 初始化放入store中的state
-    1. 可以很明确看出当前页面用到的state结构
-    1. scope：用来限制存放在store中的本页面state的作用于，防止页面过多，产生冲突，命名约定：各个级别模块名+文件名，驼峰命名
-    1. sync: true 属性，标记当前页面state与localStorage同步，当前页面state变化将自动保存到localStorage中，页面启动时，会把localStorage中数据自动同步到redux中。
-1. 使用`this.props.actions.setState(scope, payload)`方法将数据存于store
-1. 如果修改当前页面数据，可以直接使用`this.props.actions.setState(payload)`，不必指定scope
-1. 修改其他页面数据，则要指定scope，
-    ```js
-    // 比如UserAdd.jsx页面要修改UserList.jsx页面所用到的state
-    this.props.actions.setState('userListPageScope', payload);
-    ```
-1. store中的state注入本组件：
-    ```js
-    export function mapStateToProps(state) {
-        return {
-            ...state.pageState.someUniqueString, // someUniqueString 为当前页面scope
-        };
-    }
-    // 通过this.props获取：
-    this.props.    a;
-    this.props.b
-
-    // 注入多个页面state时，防止冲突，可以用如下写法
-    export function mapStateToProps(state) {
-        return {
-            page1: state.pageState.page1Scope,
-            page2: state.pageState.page2Scope,
-        };
-    }
-    // 通过this.props获取：
-    this.page1.a;
-    this.page2.a;
-    ```

@@ -24,6 +24,14 @@ function filterObjectByObject(originObj, mapObj = {}, result = {}) {
     return result;
 }
 
+/**
+ * Storage 通过函数获取，Storage.setItem中，可以基于data进行区分操作
+ * 比如通过data.syncType标记，区分同步到local、session、server等
+ *
+ * @param key
+ * @param syncState
+ * @param state
+ */
 function syncToStorage(key, syncState, state) {
     const Storage = getStorage();
     // 根据 syncState 结构 获取 state中对应的数据，syncState === true 获取state中所有数据

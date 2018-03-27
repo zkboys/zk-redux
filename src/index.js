@@ -2,8 +2,6 @@ import {createAction, handleActions} from 'redux-actions';
 import {identity} from 'lodash/util';
 import actionUtils from './action-utils';
 import checkAction from './check-action';
-import reducerPage from './reducer-page';
-import * as actionPage from './action-page';
 import _handleAsyncReducer from './handle-async-reducer';
 import * as _actionTypes from './action-types';
 
@@ -28,8 +26,14 @@ let _handleSuccess = ({successTip}) => {
     if (successTip) alert(successTip);
 };
 
-let _storage = window.localStorage;
+let _storage = null;
 
+/**
+ * storage 需要有两个函数 setItem multiGet
+ * @param storage
+ * @param handleError
+ * @param handleSuccess
+ */
 export function init({storage, handleError, handleSuccess}) {
     if (handleError) _handleError = handleError;
     if (storage) _storage = storage;
@@ -51,19 +55,17 @@ export function getStorage() {
 /**
  * 获取并整合 actions reducers
  * @param models
- * @param pageInitState
  * @returns {{actions, reducers: {pageState}}}
  */
-export function getActionsAndReducers({models, pageInitState}) {
+export function getActionsAndReducers({models}) {
     const syncKeys = Object.keys(models).filter(key => {
         const {syncState} = models[key];
         return !!syncState;
     });
 
-    const utils = actionUtils({pageInitState, syncKeys});
-    const pageState = reducerPage(pageInitState);
-    let _actions = checkAction({actionPage, utils});
-    let _reducers = {pageState};
+    const utils = actionUtils({syncKeys});
+    let _actions = checkAction({utils});
+    let _reducers = {};
 
     Object.keys(models).forEach(modelName => {
         const model = models[modelName];

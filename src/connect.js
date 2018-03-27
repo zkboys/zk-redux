@@ -4,7 +4,6 @@ import {bindActionCreators} from 'redux';
 export default function defaultConnect({actions, options}) {
     return function connectComponent(component) {
         const {
-            INIT_STATE = {},
             mapStateToProps = () => ({}),
             mapDispatchToProps = (dispatch) => {
                 const ac = bindActionCreators(actions, dispatch);
@@ -13,14 +12,6 @@ export default function defaultConnect({actions, options}) {
                         ac[key] = bindActionCreators(actions[key], dispatch);
                     }
                 });
-                const PAGE_SCOPE = INIT_STATE.scope || 'commonPageScope';
-                ac.setState = (pageScope, payload) => {
-                    if (typeof pageScope === 'string') {
-                        ac.setScopeState(pageScope, payload);
-                    } else {
-                        ac.setScopeState(PAGE_SCOPE, pageScope);
-                    }
-                };
 
                 return {action: ac};
             },
@@ -31,8 +22,7 @@ export default function defaultConnect({actions, options}) {
         // 只要组件导出了mapStateToProps，就说明要与redux进行连接
         // 优先获取LayoutComponent，如果不存在，获取default
         if (mapStateToProps) {
-            let com = LayoutComponent;
-            if (!com) com = component.default;
+            let com = LayoutComponent || component.default;
             if (!com) return component;
             return connect(
                 mapStateToProps,
